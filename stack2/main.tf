@@ -15,7 +15,7 @@ module "bedrock_kb" {
   aurora_primary_key_field = "id"
   aurora_metadata_field = "metadata"
   aurora_text_field = "content"
-  aurora_verctor_field = "embedding"
+  aurora_vector_field = "embedding"
   aurora_username   = "dbadmin"
   aurora_secret_arn = "<YOUR_AURORA_SECRET_ARN>"
   s3_bucket_arn     = "<YOUR_S3_BUCKET_ARN>"
