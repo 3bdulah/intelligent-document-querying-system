@@ -12,13 +12,45 @@ resource "aws_iam_role" "bedrock_kb_role" {
         Principal = {
           Service = "bedrock.amazonaws.com"
         }
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+          ArnLike = {
+            "aws:SourceArn" = "arn:aws:bedrock:us-east-1:${data.aws_caller_identity.current.account_id}:knowledge-base/*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "bedrock_model_access" {
+  name        = "${var.knowledge_base_name}-bedrock-model-access"
+  description = "Allow the knowledge base role to list available models and invoke the configured embedding model"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:ListFoundationModels",
+          "bedrock:ListCustomModels"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = ["bedrock:InvokeModel"]
+        Resource = "arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-embed-text-v1"
       }
     ]
   })
 }
 
 resource "aws_iam_role_policy_attachment" "bedrock_kb_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonBedrockFullAccess"
+  policy_arn = aws_iam_policy.bedrock_model_access.arn
   role       = aws_iam_role.bedrock_kb_role.name
 }
 
@@ -72,11 +104,19 @@ resource "aws_iam_policy" "bedrock_kb_rds_access" {
           "rds:DescribeDBClusters",
           "rds:DescribeDBInstances",
           "rds:DescribeDBSubnetGroups",
-          "rds:ListTagsForResource",
-          "s3:ListBucket",
-          "s3:GetObject"
+          "rds:ListTagsForResource"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = ["s3:ListBucket"]
+        Resource = var.s3_bucket_arn
+      },
+      {
+        Effect = "Allow"
+        Action = ["s3:GetObject"]
+        Resource = "${var.s3_bucket_arn}/*"
       },
       {
         Effect = "Allow"
@@ -119,7 +159,7 @@ resource "aws_bedrockagent_knowledge_base" "main" {
       table_name = var.aurora_table_name
       field_mapping {
         primary_key_field = var.aurora_primary_key_field
-        vector_field   = var.aurora_verctor_field
+        vector_field   = var.aurora_vector_field
         text_field     = var.aurora_text_field
         metadata_field = var.aurora_metadata_field
       }
