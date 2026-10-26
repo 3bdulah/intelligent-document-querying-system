@@ -32,14 +32,14 @@ This project consists of several components:
 
 The goal is to create a Bedrock Knowledge Base that can leverage data stored in an Aurora Serverless database, with the ability to easily upload supporting documents to S3. This will allow us to ask the LLM for information from the documentation.
 
-> **Cost and security warning:** provisioning can create billable AWS resources, including networking, Aurora, S3, and Bedrock-related storage or processing. Review `terraform plan`, AWS pricing, IAM permissions, and network exposure before applying changes. Use least-privilege credentials and never commit real keys. After testing, review each stack's resources and remove them deliberately when no longer needed; confirm the target workspace and back up any data before running destructive cleanup.
+> **Cost and security warning:** provisioning can create billable AWS resources, including networking (the configuration enables a NAT gateway), Aurora, S3, and Bedrock-related storage or processing. Review `terraform plan`, AWS pricing, IAM permissions, and network exposure before applying changes. The S3 configuration uses `force_destroy = true`, so cleanup may permanently delete bucket objects. Use least-privilege credentials, never commit real keys, and confirm the target workspace and back up data before destructive cleanup.
 
 ## Prerequisites
 
 Before you begin, ensure you have the following:
 
 - AWS CLI installed and configured with appropriate credentials
-- Terraform installed (version 0.12 or later)
+- Terraform 1.x installed (the VPC module version used here requires a modern Terraform release)
 - Python 3.10 or later
 - pip (Python package manager)
 
